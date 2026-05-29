@@ -4,10 +4,34 @@ import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
+import fs from 'fs';
+import path from 'path';
 
 dotenv.config();
 
-const prisma = new PrismaClient();
+let databaseUrl = process.env.DATABASE_URL || 'file:./dev.db';
+
+if (process.env.VERCEL) {
+  const srcPath = path.join(process.cwd(), 'prisma', 'dev.db');
+  const destPath = '/tmp/dev.db';
+  try {
+    if (!fs.existsSync(destPath)) {
+      fs.copyFileSync(srcPath, destPath);
+      console.log('Database successfully copied to /tmp');
+    }
+    databaseUrl = 'file:/tmp/dev.db';
+  } catch (err) {
+    console.error('Failed to copy database to /tmp:', err);
+  }
+}
+
+const prisma = new PrismaClient({
+  datasources: {
+    db: {
+      url: databaseUrl
+    }
+  }
+});
 const app = express();
 const port = process.env.PORT || 3001;
 const JWT_SECRET = process.env.JWT_SECRET || 'ice-cube-super-secret-jwt-key-change-in-production-2024';
@@ -481,6 +505,10 @@ app.post('/api/ai/chat', async (req, res) => {
   }
 });
 
-app.listen(port, () => {
-  console.log(`Server is running on http://localhost:${port}`);
-});
+if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
+  app.listen(port, () => {
+    console.log(`Server is running on http://localhost:${port}`);
+  });
+}
+
+export default app;
