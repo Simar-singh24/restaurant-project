@@ -32,6 +32,8 @@ model Order {
   status      String      @default("PENDING")
   createdAt   DateTime    @default(now())
   items       OrderItem[]
+  userId      Int?
+  user        User?       @relation(fields: [userId], references: [id])
 }
 
 model OrderItem {
@@ -42,4 +44,14 @@ model OrderItem {
   price     Float
   quantity  Int
   type      String  // 'food' or 'cocktail'
+}
+
+model User {
+  id           Int      @id @default(autoincrement())
+  email        String   @unique
+  passwordHash String
+  name         String
+  aiCredits    Int      @default(10)
+  createdAt    DateTime @default(now())
+  orders       Order[]
 }
