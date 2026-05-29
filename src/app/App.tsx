@@ -4,6 +4,7 @@ import { Hero } from '@/app/components/Hero';
 import { About } from '@/app/components/About';
 import { Menu } from '@/app/components/Menu';
 import { Cocktails } from '@/app/components/Cocktails';
+import { AICulinaryLab } from '@/app/components/AICulinaryLab';
 import { Footer } from '@/app/components/Footer';
 import { LoadingScreen } from '@/app/components/LoadingScreen';
 import { CartProvider } from '@/app/context/CartContext';
@@ -43,6 +44,7 @@ export default function App() {
           <About />
           <Menu />
           <Cocktails />
+          <AICulinaryLab />
           <Footer />
           <Cart />
           <AuthModal />
