@@ -7,7 +7,10 @@ import { Cocktails } from '@/app/components/Cocktails';
 import { Footer } from '@/app/components/Footer';
 import { LoadingScreen } from '@/app/components/LoadingScreen';
 import { CartProvider } from '@/app/context/CartContext';
+import { AuthProvider } from '@/app/context/AuthContext';
+import { AuthModal } from '@/app/components/AuthModal';
 import { Cart } from '@/app/components/Cart';
+import { Toaster } from 'sonner';
 
 export default function App() {
   const [showLoading, setShowLoading] = useState(true);
@@ -31,17 +34,21 @@ export default function App() {
   }, []);
 
   return (
-    <CartProvider>
-      <div className="size-full">
-        {showLoading && <LoadingScreen />}
-        <Navbar />
-        <Hero />
-        <About />
-        <Menu />
-        <Cocktails />
-        <Footer />
-        <Cart />
-      </div>
-    </CartProvider>
+    <AuthProvider>
+      <CartProvider>
+        <div className="size-full">
+          {showLoading && <LoadingScreen />}
+          <Navbar />
+          <Hero />
+          <About />
+          <Menu />
+          <Cocktails />
+          <Footer />
+          <Cart />
+          <AuthModal />
+          <Toaster position="bottom-right" richColors />
+        </div>
+      </CartProvider>
+    </AuthProvider>
   );
 }

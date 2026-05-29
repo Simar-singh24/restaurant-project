@@ -1,9 +1,11 @@
 import { Fragment, useState } from 'react';
 import { useCart } from '@/app/context/CartContext';
+import { useAuth } from '@/app/context/AuthContext';
 import { X, Minus, Plus, ShoppingBag, Trash2 } from 'lucide-react';
 
 export function Cart() {
   const { isCartOpen, setIsCartOpen, cartItems, updateQuantity, removeFromCart, cartTotal, clearCart } = useCart();
+  const { user, refreshUserData } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [orderStatus, setOrderStatus] = useState<'idle' | 'success' | 'error'>('idle');
 
@@ -26,6 +28,7 @@ export function Cart() {
             type: item.type,
           })),
           totalAmount: cartTotal,
+          userId: user ? user.id : undefined,
         }),
       });
 
@@ -33,6 +36,12 @@ export function Cart() {
       
       setOrderStatus('success');
       clearCart();
+      
+      // Proactively refresh user context to display the newly added order in history modal
+      if (user) {
+        await refreshUserData();
+      }
+
       setTimeout(() => {
         setIsCartOpen(false);
         setOrderStatus('idle');
