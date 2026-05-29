@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
@@ -62,6 +63,14 @@ const cocktails = [
 
 async function main() {
   console.log('Seeding database...');
+  
+  // Clear existing records to ensure idempotent fresh seeding
+  await prisma.orderItem.deleteMany({});
+  await prisma.order.deleteMany({});
+  await prisma.user.deleteMany({});
+  await prisma.menuItem.deleteMany({});
+  await prisma.cocktail.deleteMany({});
+
   for (const item of menuItems) {
     await prisma.menuItem.create({
       data: item,
@@ -72,6 +81,20 @@ async function main() {
       data: drink,
     });
   }
+
+  // Seed default admin account
+  const salt = await bcrypt.genSalt(10);
+  const passwordHash = await bcrypt.hash('adminpassword123', salt);
+  await prisma.user.create({
+    data: {
+      name: 'Executive Admin',
+      email: 'admin@icecube.com',
+      passwordHash,
+      role: 'admin',
+      aiCredits: 99,
+    },
+  });
+
   console.log('Database seeded successfully!');
 }
 

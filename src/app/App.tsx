@@ -5,6 +5,7 @@ import { About } from '@/app/components/About';
 import { Menu } from '@/app/components/Menu';
 import { Cocktails } from '@/app/components/Cocktails';
 import { AICulinaryLab } from '@/app/components/AICulinaryLab';
+import { AdminDashboard } from '@/app/components/AdminDashboard';
 import { Footer } from '@/app/components/Footer';
 import { LoadingScreen } from '@/app/components/LoadingScreen';
 import { CartProvider } from '@/app/context/CartContext';
@@ -15,6 +16,7 @@ import { Toaster } from 'sonner';
 
 export default function App() {
   const [showLoading, setShowLoading] = useState(true);
+  const [isAdminOpen, setIsAdminOpen] = useState(false);
 
   useEffect(() => {
     // Add smooth scroll behavior to the whole document
@@ -39,7 +41,7 @@ export default function App() {
       <CartProvider>
         <div className="size-full">
           {showLoading && <LoadingScreen />}
-          <Navbar />
+          <Navbar onAdminClick={() => setIsAdminOpen(true)} />
           <Hero />
           <About />
           <Menu />
@@ -48,6 +50,7 @@ export default function App() {
           <Footer />
           <Cart />
           <AuthModal />
+          {isAdminOpen && <AdminDashboard onClose={() => setIsAdminOpen(false)} />}
           <Toaster position="bottom-right" richColors />
         </div>
       </CartProvider>

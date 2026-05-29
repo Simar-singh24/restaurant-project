@@ -4,7 +4,7 @@ import { useCart } from '@/app/context/CartContext';
 import { useAuth } from '@/app/context/AuthContext';
 import { toast } from 'sonner';
 
-export function Navbar() {
+export function Navbar({ onAdminClick }: { onAdminClick?: () => void }) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState('home');
@@ -162,6 +162,18 @@ export function Navbar() {
                       </div>
 
                       <div className="py-2">
+                        {user.role === 'admin' && (
+                          <button
+                            onClick={() => {
+                              onAdminClick?.();
+                              setIsDropdownOpen(false);
+                            }}
+                            className="w-full px-5 py-2.5 text-left text-sm font-bold text-amber-800 hover:bg-amber-50/50 flex items-center gap-3 border-b border-gray-50 mb-1"
+                          >
+                            <Sparkles className="w-4.5 h-4.5 text-amber-600 animate-pulse" />
+                            Admin Portal
+                          </button>
+                        )}
                         <button
                           onClick={() => {
                             setShowHistoryModal(true);
@@ -252,6 +264,18 @@ export function Navbar() {
             <div className="px-4 mt-4 space-y-3">
               {user ? (
                 <>
+                  {user.role === 'admin' && (
+                    <button
+                      onClick={() => {
+                        onAdminClick?.();
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className="w-full bg-gradient-to-r from-amber-600 to-amber-700 text-white px-6 py-3 rounded-full text-center hover:from-amber-700 hover:to-amber-800 transition-all shadow-md text-sm font-semibold mb-2.5 flex items-center justify-center gap-2"
+                    >
+                      <Sparkles className="w-4 h-4 animate-pulse" />
+                      Admin Portal
+                    </button>
+                  )}
                   <div className="flex items-center justify-between py-2 border-b border-gray-100">
                     <span className="text-sm font-semibold text-gray-600">Credits: {user.aiCredits}</span>
                     <button 

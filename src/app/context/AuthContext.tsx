@@ -5,6 +5,7 @@ export interface UserType {
   email: string;
   name: string;
   aiCredits: number;
+  role: string;
 }
 
 export interface OrderItemType {
@@ -62,6 +63,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           email: data.email,
           name: data.name,
           aiCredits: data.aiCredits,
+          role: data.role,
         });
         setOrders(data.orders || []);
       } else {

@@ -52,6 +52,7 @@ model User {
   passwordHash String
   name         String
   aiCredits    Int      @default(10)
+  role         String   @default("user")
   createdAt    DateTime @default(now())
   orders       Order[]
 }

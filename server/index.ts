@@ -98,6 +98,7 @@ app.post('/api/auth/register', async (req, res) => {
         email: user.email,
         name: user.name,
         aiCredits: user.aiCredits,
+        role: user.role,
       },
     });
   } catch (error) {
@@ -137,6 +138,7 @@ app.post('/api/auth/login', async (req, res) => {
         email: user.email,
         name: user.name,
         aiCredits: user.aiCredits,
+        role: user.role,
       },
     });
   } catch (error) {
@@ -167,6 +169,7 @@ app.get('/api/auth/me', authenticateToken, async (req: any, res) => {
       email: user.email,
       name: user.name,
       aiCredits: user.aiCredits,
+      role: user.role,
       orders: user.orders,
     });
   } catch (error) {
@@ -502,6 +505,157 @@ app.post('/api/ai/chat', async (req, res) => {
   } catch (error) {
     console.error('AI Chat Failed:', error);
     res.status(500).json({ error: 'Sommelier is busy pouring drinks. Please check back shortly.' });
+  }
+});
+
+// --- ADMIN ENDPOINTS ---
+
+// Get all orders (Admin only)
+app.get('/api/admin/orders', authenticateToken, async (req: any, res) => {
+  try {
+    const requestingUser = await prisma.user.findUnique({ where: { id: req.user.id } });
+    if (!requestingUser || requestingUser.role !== 'admin') {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    const allOrders = await prisma.order.findMany({
+      orderBy: { createdAt: 'desc' },
+      include: { items: true, user: true },
+    });
+    res.json(allOrders);
+  } catch (err) {
+    console.error('Failed to fetch orders:', err);
+    res.status(500).json({ error: 'Failed to fetch all orders' });
+  }
+});
+
+// Update order status (Admin only)
+app.put('/api/admin/orders/:id', authenticateToken, async (req: any, res) => {
+  try {
+    const requestingUser = await prisma.user.findUnique({ where: { id: req.user.id } });
+    if (!requestingUser || requestingUser.role !== 'admin') {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    const { status } = req.body;
+    const orderId = parseInt(req.params.id);
+
+    const updatedOrder = await prisma.order.update({
+      where: { id: orderId },
+      data: { status },
+      include: { items: true },
+    });
+    res.json(updatedOrder);
+  } catch (err) {
+    console.error('Failed to update order status:', err);
+    res.status(500).json({ error: 'Failed to update order status' });
+  }
+});
+
+// Create menu item (Admin only)
+app.post('/api/admin/menu', authenticateToken, async (req: any, res) => {
+  try {
+    const requestingUser = await prisma.user.findUnique({ where: { id: req.user.id } });
+    if (!requestingUser || requestingUser.role !== 'admin') {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    const { name, description, price, image, type, rating, trending, isSpecial } = req.body;
+
+    if (type === 'food') {
+      const item = await prisma.menuItem.create({
+        data: {
+          name,
+          description,
+          price: price.toString(),
+          image: image || 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080',
+          rating: parseFloat(rating) || 4.5,
+          trending: !!trending,
+        },
+      });
+      res.status(201).json({ ...item, type });
+    } else {
+      const item = await prisma.cocktail.create({
+        data: {
+          name,
+          description,
+          price: price.toString(),
+          image: image || 'https://images.unsplash.com/photo-1550740843-08901ea6b88fd3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080',
+          isSpecial: !!isSpecial,
+        },
+      });
+      res.status(201).json({ ...item, type });
+    }
+  } catch (err) {
+    console.error('Failed to create menu item:', err);
+    res.status(500).json({ error: 'Failed to create menu item' });
+  }
+});
+
+// Update menu item (Admin only)
+app.put('/api/admin/menu/:id', authenticateToken, async (req: any, res) => {
+  try {
+    const requestingUser = await prisma.user.findUnique({ where: { id: req.user.id } });
+    if (!requestingUser || requestingUser.role !== 'admin') {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    const { name, description, price, image, type, rating, trending, isSpecial } = req.body;
+    const itemId = parseInt(req.params.id);
+
+    if (type === 'food') {
+      const item = await prisma.menuItem.update({
+        where: { id: itemId },
+        data: {
+          name,
+          description,
+          price: price.toString(),
+          image,
+          rating: parseFloat(rating),
+          trending: !!trending,
+        },
+      });
+      res.json({ ...item, type });
+    } else {
+      const item = await prisma.cocktail.update({
+        where: { id: itemId },
+        data: {
+          name,
+          description,
+          price: price.toString(),
+          image,
+          isSpecial: !!isSpecial,
+        },
+      });
+      res.json({ ...item, type });
+    }
+  } catch (err) {
+    console.error('Failed to update menu item:', err);
+    res.status(500).json({ error: 'Failed to update menu item' });
+  }
+});
+
+// Delete menu item (Admin only)
+app.delete('/api/admin/menu/:id', authenticateToken, async (req: any, res) => {
+  try {
+    const requestingUser = await prisma.user.findUnique({ where: { id: req.user.id } });
+    if (!requestingUser || requestingUser.role !== 'admin') {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    const itemId = parseInt(req.params.id);
+    const { type } = req.query; // 'food' or 'cocktail'
+
+    if (type === 'food') {
+      await prisma.menuItem.delete({ where: { id: itemId } });
+    } else {
+      await prisma.cocktail.delete({ where: { id: itemId } });
+    }
+
+    res.json({ success: true, message: 'Item deleted successfully' });
+  } catch (err) {
+    console.error('Failed to delete menu item:', err);
+    res.status(500).json({ error: 'Failed to delete menu item' });
   }
 });
 
